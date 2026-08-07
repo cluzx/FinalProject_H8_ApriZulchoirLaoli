@@ -5,8 +5,14 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
+
+# Handling penyesuaian versi modul chains LangChain
+try:
+    from langchain.chains.combine_documents import create_stuff_documents_chain
+    from langchain.chains import create_retrieval_chain
+except ModuleNotFoundError:
+    from langchain_classic.chains.combine_documents import create_stuff_documents_chain
+    from langchain_classic.chains import create_retrieval_chain
 
 # Konfigurasi Halaman Streamlit
 st.set_page_config(page_title="Binjai Smart Travel Agent", page_icon="🌴")
