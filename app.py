@@ -40,8 +40,11 @@ def init_rag(_api_key):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=120)
     chunks = text_splitter.split_documents(documents)
     
-    # 3. Embeddings & VectorStore
-    embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
+    # 3. Embeddings & VectorStore (Eksplisit sertakan google_api_key)
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/text-embedding-004", 
+        google_api_key=_api_key
+    )
     vectorstore = Chroma.from_documents(documents=chunks, embedding=embeddings)
     return vectorstore.as_retriever(search_kwargs={"k": 3})
 
