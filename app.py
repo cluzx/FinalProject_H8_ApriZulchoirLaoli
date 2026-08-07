@@ -5,7 +5,7 @@ import streamlit as st
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# Import Vector Store & FastEmbed (Embedding Lokal Bebas Error API)
+# Import Vector Store & FastEmbed (Embedding Lokal)
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import FastEmbedEmbeddings
 
@@ -33,6 +33,14 @@ with st.sidebar:
     st.divider()
     temperature = st.slider("Temperature (Kreativitas):", min_value=0.0, max_value=1.0, value=0.3, step=0.1)
 
+# Cek Ketersediaan API Key Gemini
+if not api_key:
+    st.warning("⚠️ Silakan masukkan Gemini API Key di sidebar untuk melanjutkan.")
+    st.stop()
+
+# Set Environment Variable API Key Secara Global
+os.environ["GOOGLE_API_KEY"] = api_key
+
 # 3. Fungsi Inisialisasi System RAG (Cached agar cepat)
 @st.cache_resource(show_spinner="Membangun Vector DB dari PDF...")
 def init_rag_system():
@@ -51,11 +59,6 @@ def init_rag_system():
     
     return vectorstore.as_retriever(search_kwargs={"k": 3})
 
-# Cek Ketersediaan API Key Gemini
-if not api_key:
-    st.warning("⚠️ Silakan masukkan Gemini API Key di sidebar untuk melanjutkan.")
-    st.stop()
-
 # 4. Load Retriever & Setup LLM
 try:
     retriever = init_rag_system()
@@ -63,9 +66,9 @@ except Exception as e:
     st.error(f"Gagal memuat RAG Pipeline: {e}")
     st.stop()
 
-os.environ["GOOGLE_API_KEY"] = api_key
+# Inisialisasi LLM Gemini Mutakhir (gemini-2.5-flash)
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", 
+    model="gemini-3.6-flash", 
     temperature=temperature, 
     google_api_key=api_key
 )
@@ -108,14 +111,18 @@ if user_input := st.chat_input("Tanyakan sesuatu seputar wisata atau kuliner di 
         
     with st.chat_message("assistant"):
         with st.spinner("Mencari jawaban dari dokumen..."):
-            res = rag_chain.invoke({"input": user_input})
-            answer = res["answer"]
-            st.markdown(answer)
-            
-            # Menampilkan Sumber Dokumen / Retrieval Context
-            with st.expander("📚 Lihat Sumber Dokumen RAG"):
-                for i, doc in enumerate(res["context"]):
-                    st.caption(f"**Chunk {i+1} (Halaman {doc.metadata['page'] + 1}):**")
-                    st.text(doc.page_content[:250] + "...")
+            try:
+                res = rag_chain.invoke({"input": user_input})
+                answer = res["answer"]
+                st.markdown(answer)
+                
+                # Menampilkan Sumber Dokumen / Retrieval Context
+                with st.expander("📚 Lihat Sumber Dokumen RAG"):
+                    for i, doc in enumerate(res["context"]):
+                        st.caption(f"**Chunk {i+1} (Halaman {doc.metadata['page'] + 1}):**")
+                        st.text(doc.page_content[:250] + "...")
+            except Exception as e:
+                st.error(f"Terjadi kesalahan saat memanggil Gemini API: {e}")
+                answer = f"Error: {e}"
                     
     st.session_state.messages.append({"role": "assistant", "content": answer})
