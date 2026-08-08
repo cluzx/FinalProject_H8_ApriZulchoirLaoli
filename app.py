@@ -23,8 +23,8 @@ except ModuleNotFoundError:
 
 # 1. Konfigurasi Halaman Streamlit
 st.set_page_config(page_title="Binjai Smart Travel Agent", page_icon="🌴", layout="wide")
-st.title("🌴 Binjai Smart Travel & Culinary Agent (RAG)")
-st.caption("Asisten Wisata & Kuliner Kota Binjai Berbasis Gemini API & LangChain RAG")
+st.title("🌴 Binjai Smart Travel & Culinary Agent")
+st.caption("Asisten Wisata & Kuliner Kota Binjai")
 
 # 2. Sidebar Konfigurasi API Key & Parameter
 with st.sidebar:
@@ -110,14 +110,14 @@ if user_input := st.chat_input("Tanyakan sesuatu seputar wisata atau kuliner di 
         st.markdown(user_input)
         
     with st.chat_message("assistant"):
-        with st.spinner("Mencari jawaban dari dokumen..."):
+        with st.spinner("Mencari jawaban dari database..."):
             try:
                 res = rag_chain.invoke({"input": user_input})
                 answer = res["answer"]
                 st.markdown(answer)
                 
                 # Menampilkan Sumber Dokumen / Retrieval Context
-                with st.expander("📚 Lihat Sumber Dokumen RAG"):
+                with st.expander("📚 Lihat Sumber Database"):
                     for i, doc in enumerate(res["context"]):
                         st.caption(f"**Chunk {i+1} (Halaman {doc.metadata['page'] + 1}):**")
                         st.text(doc.page_content[:250] + "...")
